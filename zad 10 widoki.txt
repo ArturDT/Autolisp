@@ -1,0 +1,6 @@
+trzeba narsyowac buzke w Autocadzie i zrobic tak zeby pojawily sie 4 widoki 
+i ustawic je tak aby lacznie stworzyly jedna buzke
+
+potem robisz programowo 4 widoki i w kazdym ustawiasz w odpowiednim polozeniu 
+widok tak zeby pokazywalo poszczegolna cwiartke co ostatecznie ma dac ulozona buzke jak puzelki
+

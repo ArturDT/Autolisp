@@ -1,0 +1,57 @@
+
+(defun
+      wczytajIloscLinii (/)
+     	(setq ileLinii (getint))
+  	(setq ileLinii (- ileLinii 2))
+)
+(defun
+       rysujLinie (A B/)
+  	(command "_line" A B "")
+)
+(setq iloscLinii (wczytajIloscLinii))
+(setq A (getpoint))
+(setq B (getpoint))
+(setq C A)
+(setq poleFigury 0)
+(setq FirstPoint A)
+(command "_line" A B "")
+(setq i 0)
+(while (< i iloscLinii)
+  		(setq C A)
+    		(setq A B)
+  		(setq B (getpoint))
+		(rysujLinie A B)	
+		(setq i (+ i 1))
+  ;mam 3 punkty C A B (w takiej kolejnosci), na ich podstawie mozna obliczac pole
+  ;ze wzoru http://blog.klatecki.net/2013/09/liczenie-pola-powierzchni-wielokata.html
+  ;P = P + (1/2 * X[i] (Y[i+1] - Y[i-1]))
+  (setq poleKawalka (* (nth 1 A) (- (nth 0 B) (nth 0 C) )))
+ ;program zle liczy pole dla figur z wierzcho³kami po stronie ujemnej i dodatniej osi w jednej figurze
+(print "pole kawalka")
+  (print poleKawalka)
+  (setq poleFigury (+ poleFigury poleKawalka))
+)
+(setq poleKawalka (* (nth 1 A) (- (nth 0 FirstPoint) (nth 0 C) )))
+(print "pole ostatniego kawalka")
+(print poleKawalka)
+(setq poleFigury (+ poleFigury poleKawalka))
+(setq poleFigury (/ poleFigury 2))
+(command "_line" B FirstPoint "")
+(print "Pole narysowanej figury wynosi:  ")
+(if (< poleFigury 0)
+   (setq poleFigury (* poleFigury -1))
+  )
+(print poleFigury)
+
+;np: pkt 20,20   20,30   30,30   30,20
+; najpierw A = 20,20   B = 20,30
+
+;potem C = A = 20,20   		-n-1
+; a A = B = 20,30      		n
+; B natomiast B = 30,30		n+1
+;program liczy dla pierwszych 3 wierzcholkow:
+;poleKawalka =  (nth 1 A) * ((nth 0 B) - (nth 0 C))
+;czyli A[x] * (B[y] - C[y])
+;tj: 30* (30 - 20) = 300
+; to jest zle, A[x] musi byc odlegloscia pomiedzy dwoma kolejnymi pkt
+; A[x] = A[x] - B[x]

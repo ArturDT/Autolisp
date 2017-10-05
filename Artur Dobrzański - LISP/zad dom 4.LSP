@@ -1,0 +1,85 @@
+(vl-load-com)
+(setq aplikacja (vlax-get-acad-object))
+(vlax-dump-object aplikacja T)
+(setq aktywny (vla-get-activedocument aplikacja))
+(setq mspace (vla-get-modelspace aktywny))
+(setq circles nil)
+(setq polylines nil)
+(setq lines nil)
+(setq points nil)
+
+(vlax-for item mspace
+	(if (= (vlax-get-property item 'ObjectName) "AcDbPolyline")
+	  (setq polylines (append polylines (list item)))
+	   (if (= (vlax-get-property item 'ObjectName) "AcDbCircle")
+	     (setq circles (append circles (list item)))
+	     	(if (= (vlax-get-property item 'ObjectName) "AcDbLine")
+	     	  (setq lines (append lines (list item)))
+		  	(if (= (vlax-get-property item 'ObjectName) "AcDbPoint")
+	     	          (setq points (append points (list item)))
+	   		)
+	   	)
+	    )
+	)
+)
+
+(setq wiecej 0)
+
+(if (and (and (> (length polylines) (length circles)) (> (length polylines) (length lines)) ) (> (length polylines) (length points)) )
+  (progn;----------------------polilinie:
+		(setq dlsr 0)
+	  	(setq i 0)
+		(foreach dl polylines
+			(setq test (vlax-get-property dl 'Length))
+			(setq dlsr (+ dlsr test))
+		  	(setq i (+ i 1))
+		)
+		(setq dlsr (/ dlsr i))
+      		(setq linia (vla-addLine mspace (vlax-3d-point (list 100 0 0)) (vlax-3d-point (list 100 dlsr 0))))
+	)
+  (if (and (> (length circles) (length lines)) (> (length circles) (length points)) )
+    (progn;----------------------okregi:
+		(setq prsr 0)
+	  	(setq i 0)
+		(foreach pr circles
+			(setq test (vlax-get-property pr 'Radius))
+			(setq prsr (+ prsr test))
+		  	(setq i (+ i 1))
+		)
+		(setq prsr (/ prsr i))
+      		(setq okrag (vla-addCircle mspace (vlax-3d-point (list 0 0 0)) prsr))
+	)
+    (if (> (length lines) (length points))
+    	(progn;----------------------linie:
+		(setq dlsr 0)
+	  	(setq i 0)
+		(foreach dl lines
+			(setq test (vlax-get-property dl 'Length))
+			(setq dlsr (+ dlsr test))
+		  	(setq i (+ i 1))
+		)
+		(setq dlsr (/ dlsr i))
+      		(setq linia (vla-addLine mspace (vlax-3d-point (list 100 0 0)) (vlax-3d-point (list 100 dlsr 0))))
+	)
+      	(progn;---------------------------punkty:
+		(setq xsr 0)
+		(setq ysr 0)
+		(setq i 0)
+		(foreach xy points
+			(setq test (vlax-safearray->list(vlax-variant-value(vlax-get-property xy 'coordinates))))
+			(setq xsr (+ xsr (nth 0 test)))
+		  	(setq ysr (+ ysr (nth 1 test)))
+		  	(setq i (+ i 1))
+		)
+		(setq xsr (/ xsr i))
+		(setq ysr (/ ysr i))
+		(setq srwsp (list xsr ysr 0))
+		(setq punkt (vla-addPoint mspace (vlax-3d-point srwsp)))
+	)
+    )
+  )
+)
+
+
+
+

@@ -1,0 +1,10 @@
+napisac program, ktory utworzy listy elementow wystepujacych w model space 
+(dotyczy tylko podstawowych figur plaskich (line poliline point circle)
+osobno ma byc lista line, poliline, circle i point
+potem program ma dodac ten element, którego jest najwiecej ze œrednimi parametrami
+(na nowej warstwie "wynik").
+np jest najwiecej lini wiec dodaje linie i juz :D
+sredni parametr dla okregu to pole,
+lini dlugosc
+punktu odleglosc
+polilini suma wszystkich odcinkow skladowych 

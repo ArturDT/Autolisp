@@ -1,0 +1,27 @@
+
+(defun
+      wczytajIloscLinii (/)
+     	(setq ileLinii (getint))
+  	(setq ileLinii (- ileLinii 2))
+)
+
+(defun
+       rysujLinie (A B/)
+  	(command "_line" A B "")
+)
+
+(setq iloscLinii (wczytajIloscLinii))
+(setq A (getpoint))
+(setq B (getpoint))
+(setq FirstPoint A)
+
+(command "_line" A B "")
+(setq i 0)
+(while (< i iloscLinii)
+  		(setq C A)
+    		(setq A B)
+  		(setq B (getpoint))
+		(rysujLinie A B)	
+		(setq i (+ i 1))
+)
+(command "_line" B FirstPoint "")

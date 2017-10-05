@@ -1,0 +1,98 @@
+zad:
+za pomoc¹ lini stworzyc figure i policzyæ jej pole
+
+obiektowy LISP:
+--------------------------
+(vl-load-com)
+(setq aplikacja (vlax-get-acad-object))
+
+(setq nazwa (vlax-get-property aplikacja "name")) ;pobranie wartosci name aplikacji
+
+(setq aktywnydoc (vla-get-activedocument aplikacja)) ;->
+(setq nazwa (vla-get-name aktywnydoc)); pobieranie nazwy w inny sposob
+
+(vla-put-name aktywnydoc "rysunek1.dwg") ;zmiana nazwy
+(vlax-dump-object aktywnydoc T)); zmienia dump na true 
+(vla-put-height aktywnydoc 200) ;ustalanie rozmiaru okna
+(vlax-invoke-method aktywnydoc "save");zapisanie aktywnego dokumentu
+
+---------------------------------------
+
+
+(defun 					; zdefiniuj funkcje
+nazwafunkcji (/)		;argumenty funkcji
+(+ 1 9)
+)   					;funkcja zwróci wartoœæ 10
+(setq x (nazwafunkcji)) ; x przyjmie wartoœæ 10
+-----------------------------------------------
+(defun 
+nazwafunkcji (x /)    	; argumenty funkcji
+(+ 1 x)					;zwróci x + 1
+)  
+(setq x (nazwafunkcji 10)) ; x bêdzie 11
+---------------------------------------------------
+(defun 
+nazwafunkcji (x y /)    	; argumenty funkcji
+(+ y x)
+)  
+(setq x (nazwafunkcji 10 1)) ; x bêdzie 11 bo x+y
+----------------------------------------------------
+nazwafunkcji (x  y / nazwazmiennejlokalnej) ;zmienna lokalna u¿ywana w funkcji
+
+
+zad1:
+
+(defun
+      wczytajIloscLinii (/)
+     	(setq ileLinii (getint))
+  	(setq ileLinii (- ileLinii 1))
+)
+
+(defun
+       rysujLinie (A B/)
+  	(command "_line" A B "")
+)
+
+(defun
+       sprawdzKolizje (A B C K)
+  	(setq Y1 1)
+  	(if (and (> (nth 1 C) (nth 1 A))(> (nth 1 A) (nth 1 B)) )
+		(setq Y1 0)
+	  )
+	  (if (and (< (nth 1 C) (nth 1 A))(< (nth 1 A) (nth 1 B)) )
+			(setq Y1 0)
+		  )
+  	
+  	(if (> Y1 0)
+	  (progn
+	   	(if (< (nth 0 A) (nth 0 B))
+	  	  (setq K 1)
+	  	  (setq K 0)
+	        )
+	  )
+	  (setq K 0)  
+	)
+  		
+)
+
+(setq iloscLinii (wczytajIloscLinii))
+(setq A (getpoint))
+(setq B (getpoint))
+(command "_line" A B "")
+(setq i 0)
+
+(while (< i iloscLinii)
+  		(setq C A)
+    		(setq A B)
+  		(setq B (getpoint))
+  		(setq K (sprawdzKolizje A B C K))
+  		(if (= K 1)
+		    (rysujLinie A B)
+		    (progn
+		      (setq i (- i 1))
+		      (setq B A)
+		      (setq A C)
+		    )
+		)
+		(setq i (+ i 1))
+)

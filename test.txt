@@ -1,0 +1,287 @@
+;##################################################################
+(progn
+(vl-load-com)
+(setq *acadobj* (vlax-get-acad-object))
+(setq *ActiveDocument* (vla-get-activedocument *acadobj*))
+(setq *ModelSpace* (vla-get-modelspace *ActiveDocument*))
+(setq blocks (vla-get-blocks *ActiveDocument*))
+
+(setq lista_blokow nil)
+(setq lista_obiekt nil)
+(vlax-for iblock blocks
+   (if  (and (and (/= (vla-get-name iblock) "*Model_Space")
+        (/= (vla-get-name iblock) "*Paper_Space")
+        (/= (vla-get-name iblock) "*Paper_Space0")))
+	   (setq lista_blokow (append lista_blokow (List iblock)))
+   )
+   (if (= (vla-get-name iblock) "obudowa")
+     (setq obudowa iblock)
+   )
+)
+
+  (if (not (member "geom3d.arx" (arx)))
+    (arxload "geom3d")
+  )
+  (setq dzwigniaPrawa (ssget "_C" '(-3000 -3000) '(3000 3000) (list (cons 8 "dzwigniaPrawa"))))
+  (setq dzwigniaLewa (ssget "_C" '(-3000 -3000) '(3000 3000) (list (cons 8 "dzwigniaLewa"))))
+
+(setq kulka nil)
+(setq obwBokow nil)
+(vlax-for item *ModelSpace*
+  (if (= (vlax-get-property item 'Layer) "kulka")
+    (setq kulka item)
+  )
+  (if (= (vlax-get-property item 'Layer) "boki")
+    (setq boki item)
+  )
+  (if (= (vlax-get-property item 'Layer) "obwBokow")
+    (setq obwBokow (append obwBokow (List item)))
+  )
+   (if (= (vlax-get-property item 'Layer) "obwKulki")
+    (setq obwKulki item)
+  )
+)
+)
+  
+;##################################################################
+;gra:
+(progn
+  
+;config
+(setq kat 15)
+(setq iloscRuchow 3)  ;kat*iloscRuchow = kat przesuniecia (3*10 = 30)
+(setq szybkoscPoczatkowaKulki 10)
+
+;flagi:
+(setq wcisnietoX 0)
+(setq wcisnietoZ 0)
+(setq licznikX 0)
+(setq licznikZ 0)
+(setq szybkoscKulkiX 0)
+(setq szybkoscKulkiY 0)
+)
+;petla gry:
+(progn
+  (setq analiza nil)
+  (setq iii 1)
+  (while (= iii 1)
+    (progn
+      ;(readKey)
+      (if (= wcisnietoX 1)
+	(progn
+	  (ruchPrawa)
+	  (command "_delay" 100)
+	  (setq licznikX (+ licznikX 1))
+	)
+       (progn
+         (if (= wcisnietoZ 1)
+	  (progn
+	    (ruchLewa)
+	    (command "_delay" 100)
+	    (setq licznikZ (+ licznikZ 1))
+	  )
+	   (readKey)
+	 )
+       )
+      )
+      (if (= licznikX (* iloscRuchow 2))
+	(zerujX)
+      )
+      (if (= licznikZ (* iloscRuchow 2))
+	(zerujZ)
+      )
+    )
+    (ruszKulka)
+  )
+  
+  (print "Program zakonczyl dzialanie!")
+)
+
+;##################################################################
+;funkcje:
+;(vlr-beep-reaction) dzwiek 
+
+  
+;funkcja ruszajaca kulka:
+(defun ruszKulka ()
+  (print "kulka jest w ruchu!!!")
+  (setq insPoint (vla-get-position kulka))
+  (setq insPointV (vlax-safearray->list(vlax-variant-value insPoint) ))
+  (setq x (nth 0 insPointV)) 
+  (setq y (nth 1 insPointV))  
+  (setq z (nth 2 insPointV))  
+  (vla-put-position kulka (vlax-3d-point (list (+ x szybkoscKulkiX) (+ y szybkoscKulkiY) (+ z 0))) )
+  (vla-put-center obwKulki (vlax-3d-point (list (+ x szybkoscKulkiX) (+ y szybkoscKulkiY) (+ z 0))) )
+  (setq pktKolTemp nil)
+  (setq kolizjaWykryta 0)
+  (setq zabezpieczenie 0)
+  (foreach item obwBokow
+    (setq pktKolizjiS (vla-IntersectWith obwKulki item acExtendNone))
+    (setq pktKolizjiLista (lisp-value pktKolizjiS))
+    (if (/= pktKolizjiLista nil)
+      (progn
+        (print "kolizja!!!")
+        (setq kolizjaWykryta 1)
+	(setq pktKolTemp (append pktKolTemp pktKolizjiLista))
+      )
+    )
+  )
+  (foreach item pktKolTemp
+	   (setq zabezpieczenie (+ zabezpieczenie 1))
+  )
+  (if (and (= kolizjaWykryta 1) (> zabezpieczenie 5))
+    (progn
+      (setq katRadiany (angle (list (/ (+ (nth 0 pktKolTemp) (nth 3 pktKolTemp) ) 2)
+				    (/ (+ (nth 1 pktKolTemp) (nth 4 pktKolTemp) ) 2)
+				    (/ (+ (nth 2 pktKolTemp) (nth 5 pktKolTemp) ) 2)) (list x y z)))
+      (setq katStopnie (/ (* katRadiany 180.0) pi))
+      (if  (and (< katStopnie 270) (> katStopnie 180))
+      	(progn 
+	  (if (and (< szybkoscKulkiX 0) (< szybkoscKulkiY 0))
+            (progn
+	      (setq szybkoscKulkiY (- szybkoscKulkiY (* 2 szybkoscKulkiY)))
+	    )
+	    (progn;if x<0 y>0
+	      (setq szybkoscKulkiY (- szybkoscKulkiY 2))
+              (setq szybkoscKulkiX (- szybkoscKulkiX 2))
+	    )
+           )
+	 )
+      )
+      (if (and (< katStopnie 90) (> katStopnie 0))
+	  (progn;if x<0 y>0   
+	    (if (and (< szybkoscKulkiX 0) (> szybkoscKulkiY 0))
+              (progn
+	        (setq szybkoscKulkiY (+ szybkoscKulkiY 2))
+                (setq szybkoscKulkiX (+ szybkoscKulkiX 2))
+              )
+	      (progn ;gdy x<0 i y<0 
+		(setq szybkoscKulkiX (- szybkoscKulkiX (* 2 szybkoscKulkiX)))
+	      )
+	    )
+	  )
+       )
+       (if (and (< katStopnie 360) (> katStopnie 270))
+	    (progn ;if x<0 y>0
+	      (setq szybkoscKulkiY (- szybkoscKulkiY (* 2 szybkoscKulkiY)))
+	    )
+       )
+       (if (and (< katStopnie 180) (> katStopnie 90))
+	      (progn;if x>0 y<0
+		(if (and (> szybkoscKulkiX 0) (< szybkoscKulkiY 0))
+		  (progn
+		    (setq szybkoscKulkiX (- szybkoscKulkiX (* 2 szybkoscKulkiX)))
+                  )
+		  (progn;if x>0 y>0
+		    (setq szybkoscKulkiX (- szybkoscKulkiX (* 2 szybkoscKulkiX)))
+		  )
+		)
+	      )
+       )
+      (setq analiza (append analiza (List szybkoscKulkiX szybkoscKulkiY katStopnie)))
+    )
+  )
+  
+);ruszkulka()
+
+
+
+;funkcja zczytujaca klawisze:
+(defun readKey ()
+(setq tempList (grread T 5 2)) ;to to true - pierwszy argument musi byc not nill aby obsluzyc myszke
+    ;wcisnieto s (start):
+    (if (and (equal (car tempList) 2) (vl-position (cadr tempList) '(115)))
+      (progn
+	(print "wcisnieto s")
+	(print "kulka zostaje wystrzelona!")
+	(setq szybkoscKulkiY szybkoscPoczatkowaKulki)
+	(setq szybkoscKulkiX 0)
+	(vla-put-position kulka (vlax-3d-point (list 570 70 16)) )
+	(vla-put-center obwKulki (vlax-3d-point (list 570 70 16)) )
+      )
+    )
+    ;wcisnieto x (prawa dzwignia):
+    (if (and (equal (car tempList) 2) (vl-position (cadr tempList) '(120)))
+      (progn
+	(print "wcisnieto x - ruch prawa dzwignia")
+	(setq wcisnietoX 1)
+      )
+    )
+    ;wcisnieto z (lewa dzwignia):
+    (if (and (equal (car tempList) 2) (vl-position (cadr tempList) '(122)))
+      (progn
+	(print "wcisnieto z - ruch lewa dzwignia")
+	(setq wcisnietoZ 1)
+      )
+    )
+    ;wcisnieto q (koniec):
+    (if (and (equal (car tempList) 2) (vl-position (cadr tempList) '(113)))
+      (progn
+	(print "wcisnieto q program konczy dzialanie")
+ 	(setq iii 0)
+      )
+    )
+)
+;##################################################################
+;##################################################################
+
+;ruch dzwigni:
+(defun ruchPrawa ()
+          (setq p1 '(367.041 134.469 0.0))
+          (setq p2 '(367.041 134.469 -50))
+          (if (< licznikX iloscRuchow)
+	    (rotate3d dzwigniaPrawa p1 p2 10)
+	    (rotate3d dzwigniaPrawa p1 p2 -10)
+	  )
+)
+           
+(defun ruchLewa ()
+       (setq p1 '(232.959 134.469 0.0))
+       (setq p2 '(232.959 134.469 -50))
+       (if (< licznikZ iloscRuchow)
+         (rotate3d dzwigniaLewa p1 p2 -10)
+         (rotate3d dzwigniaLewa p1 p2 10)
+       )
+ )
+ 
+;##################################################################
+;delay
+(defun delay_ms (Ms / T1) ;million second
+  (setq T1 (getvar "cdate"))
+  (setq Ms (* 0.000000001 Ms))
+  (print "opoznienie...")
+  (while (< (getvar "cdate") (+ T1 Ms)))
+)
+
+;##################################################################
+(defun zerujX ()
+ 	(print "wyzerowano X")
+	(setq wcisnietoX 0)
+	(setq licznikX 0)
+)
+;##################################################################
+(defun zerujZ ()
+  	(print "wyzerowano Z")
+	(setq wcisnietoZ 0)
+	(setq licznikZ 0)
+)
+;##################################################################
+
+;------------------------------------------------------------------
+(defun lisp-value (v) ; the Holy Graal of vla->lisp conversion? ;-)
+;; Copyright 2002 Vladimir Nesterovsky.
+;; Free for use by any commercial entity with
+;; less then $100 million annual revenue.
+(cond
+((= (type v) 'variant) (lisp-value (variant-value v)))
+((= (type v) 'safearray) (mapcar 'lisp-value (safearray-value v)))
+(T v)))
+;------------------------------------------------------------------
+
+;##################################################################
+
+;##################################################################
+
+
+
+;koniec zbioru funkcji

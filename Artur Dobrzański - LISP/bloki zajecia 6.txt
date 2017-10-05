@@ -1,0 +1,13 @@
+lista bloków 
+lista list referencji posortowana wg listy blokow
+
+1. nazwa bloku -> komponetnt 1 -> komponent 2....
+2. doda do listy blo
+3. user podaje numer bloku (bloki zapisane w liscie) i wstawia wskazany blok w punkcie wskazanym przez usera
+4. lista list -> hierarchia bloków 
+
+na samym dole blok który w struktórze nie zawiera innych bloków
+kolejny posiada wy³¹cznie figury i bloki z poprzedniego poziomu
+kolejny poziom 
+
+list 0 -> tylko figury, list 1 -> poziom wyzej ...

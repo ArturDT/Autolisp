@@ -1,0 +1,80 @@
+
+(defun
+      wczytajIloscLinii (/)
+     	(setq ileLinii (getint))
+  	(setq ileLinii (- ileLinii 2))
+)
+
+(setq iloscLinii (wczytajIloscLinii))
+(setq A (getpoint))
+(setq B (getpoint))
+(setq listaPkt nil)
+(setq listaPkt (append listaPkt A))
+(setq listaPkt (append listaPkt B))
+(setq iloscPkt 2)
+(setq C A)
+(setq poleFigury 0)
+(setq FirstPoint A)
+(command "_line" A B "")
+(setq i 0)
+(while (< i iloscLinii)
+  		(setq C A)
+    		(setq A B)
+  		(setq B (getpoint))
+		(command "_line" A B "")
+  		(setq listaPkt (append listaPkt B))
+  		(setq iloscPkt (+ iloscPkt 1))
+		(setq i (+ i 1))
+)
+(command "_line" B FirstPoint "")
+;listaPkt zawiera wartosci y,x,z poszczegolnych punktow
+;lista wyglada w nastepujacy sposob: x1,y1,z1,x2,y2,z2,x3,y3,z3.....
+;gdzie kolejne numery to numery wierzcho³ków w wielok¹cie.
+;korzystaj¹c ze wzoru http://blog.klatecki.net/2013/09/liczenie-pola-powierzchni-wielokata.html
+;P = P + (1/2 * X[i] (Y[i+1] - Y[i-1]))
+;mozemy w petli obliczyc pole narysowanej figury.
+
+(setq i 0)
+(setq iloscPkt (* iloscPkt 3))
+;(print "ilsoc pozycji w liscie:")
+;(prin1 iloscPkt)
+(while (< i iloscPkt)
+  (setq poleFragmentu 0)
+  (setq x1 i) ;potrzebujemy wspolrzednej x punktu srodkowego
+  (if (= i 0)
+    (progn    
+    (setq y0 (+ i (- iloscPkt 2))) ;wspolrzednej y punktu przed poprzednim
+    (setq y2 (+ i 4)) ;wspolrzednej y punktu kolejnego po srodkowym
+  )
+    ;else
+	(if (= i (- iloscPkt 3))
+	  (progn
+		  (setq y0 (- i 2)) ;wspolrzednej y punktu przed poprzednim
+		  (setq y2 1) ;wspolrzednej y punktu kolejnego po srodkowym
+		
+	 )
+	;   else
+	   (progn
+		  (setq y0 (- i 2)) ;wspolrzednej y punktu przed poprzednim
+		  (setq y2 (+ i 4)) ;wspolrzednej y punktu kolejnego po srodkowym
+	   )
+	  )
+	 
+  )
+    (setq poleFragmentu (* (nth x1 listaPkt) (- (nth y2 listaPkt) (nth y0 listaPkt))))
+    (setq poleFigury (+ poleFigury poleFragmentu))
+
+     ; (print "Gdy i = ")
+     ; (prin1 i)
+     ; (print "pole fragmentu = ")
+     ; (prin1 poleFragmentu)
+  
+    (setq i (+ i 3))
+  
+)
+(setq poleFigury (/ poleFigury 2))
+(if (< poleFigury 0)
+(setq poleFigury (* poleFigury -1))
+  )
+(print "pole figury wynosi:")
+(prin1 poleFigury)

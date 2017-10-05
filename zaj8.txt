@@ -1,0 +1,65 @@
+;;Filtrowanie selekcji
+;;;parametr Filtertype okreœla cechê filtra
+;;;	0 	 Text string indicating the entity type (fixed) 
+;;;	1 	 Primary text value for an entity 
+;;;	2 	 Name (attribute tag, block name, and so on) 
+;;;	3-4 	 Other text or name values 
+;;;	5 	 Entity handle; text string of up to 16 hexadecimal digits (fixed) 
+;;;	6 	 Linetype name (fixed) 
+;;;	7 	 Text style name (fixed) 
+;;;	8	 Layer name (fixed) ...........................
+;;; 
+;;;parametr FilterData okreœla wartoœæ dla cechy
+;;;typy obiektów (pomocne przy wyborze 0):
+;;;3Dface
+;;;3Dsolid
+;;;Arc
+;;;Attribute Definition
+;;;Attribute
+;;;Body
+;;;Circle
+;;;Dimension
+;;;Ellipse
+;;;Hatch
+;;;Image
+;;;Insert
+;;;Leader
+;;;Line 
+;;;Lwpolyline
+;;;Mline
+;;;Multiline Text
+;;;Point
+;;;Polyline
+;;;Ray
+;;;Region
+;;;Shape
+;;;Solid
+;;;Spline
+;;;Text
+;;;Tolerance
+;;;Trace
+;;;Viewport
+;;;Xline
+;;; 
+;;;Przyk³ad
+(setq FilterType (ConvList_to_VariantArray (list 8) vlax-vbInteger))
+(setq FilterData (ConvList_to_VariantArray (list (vlax-make-variant "red")) vlax-vbVariant))
+;(funkcja ConvList_to_VariantArray zamienia listê na variant typu SafeArray, jak to zrobiæ podano wy¿ej. elementy SafeArray s¹ typu vbInteger)
+(vla-clear SelSet)
+(vla-SelectOnScreen SelSet FilterType FilterData)
+ 
+(vla-Select SelSet acSelectionSetCrossing (vla-GetPoint *Utility* nil "p1") (vla-GetPoint *Utility* nil "p2") FilterType  FilterData )
+(vla-Select SelSet acSelectionSetWindow (vla-GetPoint *Utility* nil "p1") (vla-GetPoint *Utility* nil "p2") FilterType  FilterData )
+
+;objekt Utility mo¿na pobraæ nastêpuj¹co: (setq *utility* (vla-get-Utility *ActiveDocument*))
+
+
+(vla-SelectByPolygon SelSet acSelectionSetCrossingPolygon (ConvList_to_VariantArray (list P1X P1Y P1Z P2X P2Y P2Z P3X P3Y P3Z ) vlax-vbDouble))
+(vla-SelectByPolygon SelSet acSelectionSetCrossingPolygon
+  (ConvList_to_VariantArray (append (getpoint) (getpoint) (getpoint) (getpoint) (getpoint) (getpoint)) vlax-vbDouble) FilterType  FilterData)
+;lista punktów mo¿e byæ oczywiœcie d³u¿sza - tu wielobok jest trójk¹tem. P1X P1Y i P1Z to wspórzêdne pierwszego wierzcho³ka wieloboku)
+ 
+(vla-select SelSet acSelectionSetPrevious) - wybiera ostatnio zaznaczan¹ selekcjê
+(vla-select SelSet acSelectionSetLast) - wybiera ostatni dodany element rysunku
+(vla-select SelSet acSelectionSetAll) - wybiera wszystkie elementy
+;do ka¿dej z opcji mo¿na dodaæ filtrowanie
